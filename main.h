@@ -8,5 +8,10 @@ int start_thread_test(void);
 void task1(void);
 void task2(void);
 int main(int argc, char **argv);
+void task3(int id);
+void print_result(void);
+
+int res[NUM_THREAD];
+pthread_mutex_t lock;
 
 #endif 
