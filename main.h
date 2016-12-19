@@ -1,7 +1,7 @@
 #ifndef MAIN_H_   
 #define MAIN_H_
 
-#define NUM_THREAD 10
+#define NUM_THREAD 30
 #define TEST_TIME 30
 void *thread_task(void *x_void_ptr);
 int start_thread_test(int sched);
