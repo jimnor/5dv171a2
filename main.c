@@ -108,13 +108,13 @@ void print_result(void){
     }
 
     pthread_mutex_unlock(&lock);
-    total_light=total_light/NUM_THREAD;
+    total_light=total_light/(NUM_THREAD/2);
     printf("Average task laps completion for light task is: %d\n", total_light);
     printf("Lowest amount of completed laps for light task: %d\n", min_light);
     printf("Highest amount of completed laps for light task: %d\n", max_light);
     printf("Gap between highest and lowest completions for light task: %d\n\n", max_light-min_light);
 
-    total_heavy=total_heavy/NUM_THREAD;
+    total_heavy=total_heavy/(NUM_THREAD/2);
     printf("Average task laps completion for heavy task is: %d\n", total_heavy);
     printf("Lowest amount of completed laps for heavy task: %d\n", min_heavy);
     printf("Highest amount of completed laps for heavy task: %d\n", max_heavy);
