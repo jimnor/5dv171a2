@@ -1,14 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <time.h>
-#include <main.h>
 #include <sched.h>
+#include "main.h"
 
 void *thread_task(void *x_void_ptr);
-int start_thread_test(void);
-void task1(void);
-void task2(void);
-void task3(int id);
+int start_thread_test(int sched);
+void light_task(void);
+void heavy_task(int id);
 void print_result(void);
 
 int res[NUM_THREAD];
@@ -18,23 +18,45 @@ int main(int argc, char **argv)
 {
     printf("Test will run with %d threads during %d seconds\n", NUM_THREAD, TEST_TIME);
     printf("Initiating test... wait a bit\n");
-    printf("Running on Standard schedular\n");
-    start_thread_test();
-    
+    start_thread_test(0);
+    start_thread_test(1);
+    start_thread_test(2);
     
 	return 0;
 }
 
-int start_thread_test(void){
+int start_thread_test(int sched){
     pthread_t p[NUM_THREAD];
     pthread_mutex_init(&lock, NULL);
     int id[NUM_THREAD];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
     
+    if(sched == 1){
+	printf("Running on FIFO schedular\n");
+    	if(pthread_attr_setschedpolicy(&attr, SCHED_FIFO) != 0){
+            perror("Unable to set policy.\n");
+ 	    exit(1);
+    	}
+    }else if(sched == 2){
+	printf("Running on ROUND ROBIN schedular\n");
+	if(pthread_attr_setschedpolicy(&attr, SCHED_RR) != 0){
+            perror("Unable to set policy.\n");
+ 	    exit(1);
+    	}
+    }else{
+	printf("Running on Standard schedular (should be CFS)\n");
+	if(pthread_attr_setschedpolicy(&attr, SCHED_OTHER) != 0){
+            perror("Unable to set policy.\n");
+ 	    exit(1);
+    	}
+    }
+
     pthread_mutex_lock(&lock);
     printf("Making threads\n");
     for(int i=0; i<NUM_THREAD; i++){
         id[i]=i;
-        if(pthread_create(&p[i], NULL, thread_task, &id[i])) {
+        if(pthread_create(&p[i], &attr, thread_task, &id[i])) {
             fprintf(stderr, "Error creating thread\n");
             return 1;
         }
@@ -55,42 +77,70 @@ int start_thread_test(void){
 }
 
 void print_result(void){
-    int total=0;
-    int max=0;
-    int min=0;
+    int total_light=0;
+    int max_light=0;
+    int min_light=0;
+    int total_heavy=0;
+    int max_heavy=0;
+    int min_heavy=0;
+
     pthread_mutex_lock(&lock);
-    for(int i=0; i<NUM_THREAD; i++){
-        if(min == 0 ){
-            min = res[i];
-        }else if(min > res[i]){
-            min = res[i];
-        }else if(max < res[i]){
-            max = res[i];
+    
+    for(int i=0; i<NUM_THREAD/2; i++){
+        if(min_light == 0 ){
+            min_light = res[i];
+        }else if(min_light > res[i]){
+            min_light = res[i];
+        }else if(max_light < res[i]){
+            max_light = res[i];
         }
-        total = total +res[i];
-        printf("Thread %d completed %d work laps\n", i+1, res[i]);
+        total_light = total_light +res[i];
+        //printf("Thread %d completed %d work laps\n", i+1, res[i]);
     }
+
+    for(int i = NUM_THREAD/2; i < NUM_THREAD; i++){
+	if(min_heavy == 0 ){
+            min_heavy = res[i];
+        }else if(min_heavy > res[i]){
+            min_heavy = res[i];
+        }else if(max_heavy < res[i]){
+            max_heavy = res[i];
+        }
+        total_heavy = total_heavy +res[i];
+        //printf("Thread %d completed %d work laps\n", i+1, res[i]);
+    }
+
     pthread_mutex_unlock(&lock);
-    total=total/NUM_THREAD;
-    printf("\nAverage runtime is: %d\n", total);
-    printf("Lowest amount of completed laps: %d\n", min);
-    printf("Highest amount of completed laps: %d\n", max);
-    printf("Gap between highest and lowest completions: %d\n", max-min);
+    total_light=total_light/NUM_THREAD;
+    printf("Average task laps completion for light task is: %d\n", total_light);
+    printf("Lowest amount of completed laps for light task: %d\n", min_light);
+    printf("Highest amount of completed laps for light task: %d\n", max_light);
+    printf("Gap between highest and lowest completions for light task: %d\n\n", max_light-min_light);
+
+    total_heavy=total_heavy/NUM_THREAD;
+    printf("Average task laps completion for heavy task is: %d\n", total_heavy);
+    printf("Lowest amount of completed laps for heavy task: %d\n", min_heavy);
+    printf("Highest amount of completed laps for heavy task: %d\n", max_heavy);
+    printf("Gap between highest and lowest completions for heavy task: %d\n\n", max_heavy-min_heavy);
 }
 
 void *thread_task(void *x_void_ptr)
 {
     int id = *(int *) x_void_ptr;
-    clock_t start = clock(), diff;
     int running=1;
     int msec=0;
     int laps = 0;
+
     pthread_mutex_lock(&lock);
     pthread_mutex_unlock(&lock);
+    clock_t start = clock(), diff;
+
     while(running){
-        task1();
-        task2();
-        task3(id);
+	if(id < NUM_THREAD/2){
+            light_task();
+	}else{
+            heavy_task(id);
+	}
         
         diff = clock() - start;
         msec = diff * 1000 / CLOCKS_PER_SEC;
@@ -101,6 +151,7 @@ void *thread_task(void *x_void_ptr)
             laps++;
         }
     }
+
     pthread_mutex_lock(&lock);
     res[id]=laps;
     pthread_mutex_unlock(&lock);
@@ -108,21 +159,15 @@ void *thread_task(void *x_void_ptr)
     return NULL;
 }
 
-void task1(void)
-{
-    for(int i=0; i<1000; i++){
-        int temp = 5+5;
-    }
-}
-
-void task2(void)
+void light_task(void)
 {
     for(int i=0; i<1000; i++){
         double temp = 70000*8121/(10012+102121) * 0.10212121;
+	temp=temp+temp;
     }
 }
 
-void task3(int id)
+void heavy_task(int id)
 {
     char buf[256];
     sprintf(buf, "%d", id);

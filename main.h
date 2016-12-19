@@ -1,10 +1,10 @@
 #ifndef MAIN_H_   
 #define MAIN_H_
 
-#define NUM_THREAD 20
+#define NUM_THREAD 10
 #define TEST_TIME 1
 void *thread_task(void *x_void_ptr);
-int start_thread_test(void);
+int start_thread_test(int sched);
 void task1(void);
 void task2(void);
 int main(int argc, char **argv);
