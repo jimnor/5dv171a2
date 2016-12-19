@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <sys/time.h>
-#include <sched.h>
 #include "main.h"
 
 void *thread_task(void *x_void_ptr);
@@ -16,7 +15,8 @@ pthread_mutex_t lock;
 
 int main(int argc, char **argv)
 {
-    printf("Test will run with %d threads during %d seconds\n", NUM_THREAD, TEST_TIME);
+    printf("Test will run with %d threads during %d seconds\n"
+					, NUM_THREAD, TEST_TIME);
     printf("Initiating test... wait a bit\n");
     start_thread_test(0);
     start_thread_test(1);
@@ -25,6 +25,13 @@ int main(int argc, char **argv)
 	return 0;
 }
 
+/*
+ *Start_thread_test initate a scheduling policy test
+ *The test starts by setting the policy
+ *Followed by initiating the threads
+ *The releases a lock to allow the threads to run
+ *Lastly it printouts the result
+ */
 int start_thread_test(int sched){
     pthread_t p[NUM_THREAD];
     pthread_mutex_init(&lock, NULL);
@@ -73,6 +80,8 @@ int start_thread_test(int sched){
     return 0;
 }
 
+/*Prints out the result of the test run in a useful manner
+ */
 void print_result(void){
     int total_light=0;
     int max_light=0;
@@ -117,18 +126,25 @@ void print_result(void){
 
     pthread_mutex_unlock(&lock);
     total_light=total_light/(NUM_THREAD/2);
-    printf("Average task laps completion for light task is: %d\n", total_light);
+    printf("Average task laps completion for light task is: %d\n"
+							, total_light);
     printf("Lowest amount of completed laps for light task: %d\n", min_light);
     printf("Highest amount of completed laps for light task: %d\n", max_light);
-    printf("Gap between highest and lowest completions for light task: %d\n\n", max_light-min_light);
+    printf("Gap between highest and lowest completions for light task: %d\n\n"
+							, max_light-min_light);
 
     total_heavy=total_heavy/(NUM_THREAD/2);
     printf("Average task laps completion for heavy task is: %d\n", total_heavy);
     printf("Lowest amount of completed laps for heavy task: %d\n", min_heavy);
     printf("Highest amount of completed laps for heavy task: %d\n", max_heavy);
-    printf("Gap between highest and lowest completions for heavy task: %d\n\n", max_heavy-min_heavy);
+    printf("Gap between highest and lowest completions for heavy task: %d\n\n"
+							, max_heavy-min_heavy);
 }
 
+/*The threads main function.
+ *It runs a while loop and completes tasks given based on its ID
+ *until the time runs out then it stops
+ */
 void *thread_task(void *x_void_ptr)
 {
     int id = *(int *) x_void_ptr;
@@ -166,6 +182,8 @@ void *thread_task(void *x_void_ptr)
     return NULL;
 }
 
+/*Simple light nonsense task
+ */
 void light_task(void)
 {
     for(int i=0; i<10000; i++){
@@ -174,6 +192,9 @@ void light_task(void)
     }
 }
 
+/* A heavier nonsense task using I/O operations.
+ * can make files with it's id as name
+ */
 void heavy_task(int id)
 {
     char buf[256];
