@@ -46,10 +46,7 @@ int start_thread_test(int sched){
     	}
     }else{
 	printf("Running on Standard schedular (should be CFS)\n");
-	if(pthread_attr_setschedpolicy(&attr, SCHED_OTHER) != 0){
-            perror("Unable to set policy.\n");
- 	    exit(1);
-    	}
+	
     }
 
     pthread_mutex_lock(&lock);
@@ -161,7 +158,7 @@ void *thread_task(void *x_void_ptr)
 
 void light_task(void)
 {
-    for(int i=0; i<1000; i++){
+    for(int i=0; i<10000; i++){
         double temp = 70000*8121/(10012+102121) * 0.10212121;
 	temp=temp+temp;
     }
