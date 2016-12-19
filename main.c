@@ -86,9 +86,13 @@ void print_result(void){
     for(int i=0; i<NUM_THREAD/2; i++){
         if(min_light == 0 ){
             min_light = res[i];
-        }else if(min_light > res[i]){
+        }
+	
+	if(min_light > res[i]){
             min_light = res[i];
-        }else if(max_light < res[i]){
+        }
+	
+	if(max_light < res[i]){
             max_light = res[i];
         }
         total_light = total_light +res[i];
@@ -98,9 +102,13 @@ void print_result(void){
     for(int i = NUM_THREAD/2; i < NUM_THREAD; i++){
 	if(min_heavy == 0 ){
             min_heavy = res[i];
-        }else if(min_heavy > res[i]){
+        }
+
+	if(min_heavy > res[i]){
             min_heavy = res[i];
-        }else if(max_heavy < res[i]){
+        }
+
+	if(max_heavy < res[i]){
             max_heavy = res[i];
         }
         total_heavy = total_heavy +res[i];
