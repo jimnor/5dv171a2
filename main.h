@@ -1,7 +1,7 @@
 #ifndef MAIN_H_   
 #define MAIN_H_
 /*Must be a even number*/
-#define NUM_THREAD 30
+#define NUM_THREAD 10
 
 /*Not that the test time is multiplied by three, since three threads runs*/
 #define TEST_TIME 30
