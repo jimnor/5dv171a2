@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <time.h>
+#include <sys/time.h>
 #include <sched.h>
 #include "main.h"
 
@@ -125,12 +125,13 @@ void *thread_task(void *x_void_ptr)
 {
     int id = *(int *) x_void_ptr;
     int running=1;
-    int msec=0;
+    double msec=0;
     int laps = 0;
+    struct timeval stop, start;
 
     pthread_mutex_lock(&lock);
     pthread_mutex_unlock(&lock);
-    clock_t start = clock(), diff;
+    gettimeofday(&start, NULL);
 
     while(running){
 	if(id < NUM_THREAD/2){
@@ -139,8 +140,9 @@ void *thread_task(void *x_void_ptr)
             heavy_task(id);
 	}
         
-        diff = clock() - start;
-        msec = diff * 1000 / CLOCKS_PER_SEC;
+        gettimeofday(&stop, NULL);
+        msec = ((double)stop.tv_sec*1000 + (double)stop.tv_usec * 1E-3)
+		-((double)start.tv_sec*1000 + (double)start.tv_usec * 1E-3);
         
         if(msec >= 1000*TEST_TIME){
             running =0;
